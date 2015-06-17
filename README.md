@@ -1,0 +1,3 @@
+OMW server
+
+MIT License
