@@ -2,32 +2,40 @@
 <html>
 <head>
 <script src="js/jquery.js"></script>
+<script src="js/knockout.js"></script>
 <script src="js/socket.io.js"></script>
 </head>
 
 <body>
-  <h2>Hello, world!</h2>
-
-  <h4>Messages:</h4>
-  <ul id="messages"></ul>
-  <form id="form" action="">
-    <input id="message" autocomplete="off" />
-    <input type="submit" value="Send" />
-  </form>
+  <h4>Servers</h4>
+  <dl data-bind="foreach: servers">
+    <dt data-bind="text: name">Server name</dt>
+    <!-- ko foreach: items -->
+    <dd>
+      <button data-bind="click: selectItem.bind(null, $parent, $data), text: $data.name">Item</button>
+    </dd>
+    <!-- /ko -->
+  </dl>
 
 <script>
-var socket = io();
-$('#form').submit(function (evt) {
-  var $message = $('#message'),
-    value = $message.val();
-  if (value !== '') {
-    socket.emit('message', value);
-    $message.val('');
-  }
-  return false;
+var allServers = ko.observable(),
+  socket = io();
+
+function selectItem(server, item) {
+  socket.emit('selectItem', { server: server, item: item }, function (response) {
+    console.log('Response: ' + response);
+  });
+}
+
+$().ready(function() {
+  ko.applyBindings({ servers: allServers, selectItem: selectItem });
 });
-socket.on('message', function (message) {
-  $('#messages').append($('<li>').text(message));
+socket.on('serverUpdate', function (servers) {
+  console.log('Updating servers:', servers);
+  allServers(servers || {});
+});
+socket.emit('fetchServers', function (servers) {
+  allServers(servers || {});
 });
 </script>
 </body>

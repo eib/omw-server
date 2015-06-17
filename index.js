@@ -2,7 +2,8 @@ var http = require('http'),
   express = require('express'),
   bodyParser = require('body-parser'),
   socketIO = require('socket.io'),
-  port = Number(process.env.PORT) || 8000,
+  socketHandler = require('./lib/socketHandler'),
+  port = Number(process.env.PORT) || 8001,
   secret = process.env.SECRET,
   app = express(),
   server = http.createServer(app),
@@ -14,22 +15,7 @@ if (!secret) {
 
 app.use(express.static('public'));
 
-app.use(bodyParser.json());
-
-app.get('/', function (req, res) {
-  res.send('"Hello, world!"');
-});
-
-io.on('connection', function (socket) {
-  console.log('got a connection');
-  socket.on('message', function (message) {
-    console.log('message: ' + message);
-    io.emit('message', message);
-  });
-  socket.on('disconnect', function () {
-    console.log('disconnected');
-  });
-});
+io.sockets.on('connection', socketHandler(io));
 
 server.listen(port, function () {
   var address = server.address();
