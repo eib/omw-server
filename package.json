@@ -1,0 +1,29 @@
+{
+  "name": "omw-server",
+  "version": "0.0.1",
+  "description": "On My Way",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eib/omw-server.git"
+  },
+  "keywords": [
+    "omw"
+  ],
+  "author": "Ethan Blackwelder <ethan@eblackwelder.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eib/omw-server/issues"
+  },
+  "homepage": "https://github.com/eib/omw-server#readme",
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.13.1",
+    "express": "^4.12.4",
+    "socket.io": "^1.3.5",
+    "socket.io-client": "^1.3.5"
+  }
+}
