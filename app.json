@@ -1,0 +1,7 @@
+{
+  "name": "OMW server",
+  "description": "OMW server",
+  "repository": "https://github.com/eib/omw-server.git",
+  "logo": "http://node-js-sample.herokuapp.com/node.svg",
+  "keywords": ["node"]
+}
