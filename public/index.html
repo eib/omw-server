@@ -4,6 +4,8 @@
 <script src="js/jquery.js"></script>
 <script src="js/knockout.js"></script>
 <script src="js/socket.io.js"></script>
+<style type="text/css">
+</style>
 </head>
 
 <body>
@@ -15,18 +17,19 @@
     </dd>
     <!-- ko foreach: items -->
     <dd>
-      <button data-bind="click: $root.actions.selectItem.bind(null, $parent, $data), text: $data.name">Item</button>
+      <button data-bind="click: $root.actions.play.bind(null, $parent, $data), text: $data.name">Item</button>
     </dd>
     <!-- /ko -->
   </dl>
 
 <script>
 var allServers = ko.observable(),
-  socket = io();
+  socket = io(),
+  volumePercent = 100;
 
-function selectItem(server, item) {
-  console.log('Selecting item:', item, 'for server:', server);
-  socket.emit('selectItem', { server: server, item: item }, function (response) {
+function play(server, item) {
+  console.log('Playing item:', item, 'for server:', server);
+  socket.emit('selectItem', { server: server, item: item, volumePercent: volumePercent }, function (response) {
     console.log('Response:', response);
   });
 }
@@ -42,7 +45,7 @@ $().ready(function() {
   ko.applyBindings({
     servers: allServers,
     actions: {
-      selectItem: selectItem,
+      play: play,
       stop: stop,
     }
   });
