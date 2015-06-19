@@ -10,9 +10,12 @@
   <h4>Servers</h4>
   <dl data-bind="foreach: servers">
     <dt data-bind="text: name">Server name</dt>
+    <dd>
+      <button data-bind="click: $root.actions.stop.bind(null, $data)">Stop</button>
+    </dd>
     <!-- ko foreach: items -->
     <dd>
-      <button data-bind="click: selectItem.bind(null, $parent, $data), text: $data.name">Item</button>
+      <button data-bind="click: $root.actions.selectItem.bind(null, $parent, $data), text: $data.name">Item</button>
     </dd>
     <!-- /ko -->
   </dl>
@@ -22,13 +25,27 @@ var allServers = ko.observable(),
   socket = io();
 
 function selectItem(server, item) {
+  console.log('Selecting item:', item, 'for server:', server);
   socket.emit('selectItem', { server: server, item: item }, function (response) {
-    console.log('Response: ' + response);
+    console.log('Response:', response);
+  });
+}
+
+function stop(server) {
+  console.log('Stopping server:', server);
+  socket.emit('stopServer', { server: server }, function (response) {
+    console.log('Response:', response);
   });
 }
 
 $().ready(function() {
-  ko.applyBindings({ servers: allServers, selectItem: selectItem });
+  ko.applyBindings({
+    servers: allServers,
+    actions: {
+      selectItem: selectItem,
+      stop: stop,
+    }
+  });
 });
 socket.on('serverUpdate', function (servers) {
   console.log('Updating servers:', servers);
