@@ -11,7 +11,8 @@ var http = require('http'),
   io = socketIO(server);
 
 if (!secret) {
-  throw new Exception('SECRET not defined.');
+  console.log('SECRET not defined.');
+  process.exit(-1);
 }
 
 app.use(basicAuth(function (user, password) {
