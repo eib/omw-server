@@ -9,53 +9,110 @@
 </head>
 
 <body>
-  <h4>Servers</h4>
+  <!-- ko with: selectedItem -->
+  <div class="selectedItem">
+    <div class="selectedItem-name" data-bind="text: name">Name</div>
+    <div class="selectedItem-previous" data-bind="click: $root.pop(), visible: $root.canPop">Back</div>
+  </div>
+  <ul data-bind="foreach: children">
+    <li>
+      <div data-bind="text: name">Name</div>
+      <div data-bind="click: $root.selectItem.bind($root, $data), visible: hasChildren()">&rarr;</div>
+    </li>
+  </ul>
+  <!--
   <dl data-bind="foreach: servers">
     <dt data-bind="text: name">Server name</dt>
     <dd>
-      <button data-bind="click: $root.actions.stop.bind(null, $data)">Stop</button>
+      <button data-bind="click: $root.actions.stop($data)">Stop</button>
     </dd>
-    <!-- ko foreach: items -->
+    <!-- ko foreach: items --
     <dd>
-      <button data-bind="click: $root.actions.play.bind(null, $parent, $data), text: $data.name">Item</button>
+      <div class="item">
+        <span class="item-name" data-bind="text: $data.name">Name</span>
+        <span data-bind="click: $root.actions.play($data, $parent)">Play</span>
+        <span class="item-type" data-bind="text: type">Type</span>
+        <span class="item-description" data-bind="text: description">Description</span>
+      </div>
     </dd>
-    <!-- /ko -->
+    !-- /ko -->
   </dl>
-
+  <!-- /ko -->
 <script>
-var allServers = ko.observable(),
-  socket = io(),
-  volumePercent = 100;
-
-function play(server, item) {
-  console.log('Playing item:', item, 'for server:', server);
-  socket.emit('selectItem', { server: server, item: item, volumePercent: volumePercent }, function (response) {
+function RootViewModel(socket) {
+  if (!(this instanceof RootViewModel)) {
+    return new RootViewModel(socket);
+  }
+  this.socket = socket;
+  this.rootItem = new ItemViewModel({
+    name: 'Root',
+    children: [],
+  });
+  this.selectedItems = ko.observableArray([ this.rootItem ]);
+  this.selectedItem = ko.computed(function () {
+    return this.selectedItems()[this.selectedItems().length - 1];
+  }, this);
+  this.canPop = ko.computed(function () {
+    return this.selectedItems().length > 1;
+  }, this);
+}
+RootViewModel.prototype.setAllItems = function (items) {
+  this.selectedItems.removeAll();
+  this.selectedItems.push(this.rootItem);
+  items = (items || []).map(ItemViewModel);
+  ko.utils.arrayPushAll(this.rootItem.children, items);
+};
+RootViewModel.prototype.pop = function () {
+  if (this.selectedItems().length > 1) {
+    this.selectedItems.pop();
+  }
+};
+RootViewModel.prototype.selectItem = function (item) {
+  var parent = this.selectedItem();
+  console.log('Item selected:', item);
+  this.socket.emit('selectItem', { server: parent, item: item }, function (response) {
     console.log('Response:', response);
   });
-}
-
-function stop(server) {
+  this.selectedItems.push(item);
+};
+RootViewModel.prototype.stop = function (parent) {
   console.log('Stopping server:', server);
-  socket.emit('stopServer', { server: server }, function (response) {
+  this.socket.emit('stopServer', { server: parent }, function (response) {
     console.log('Response:', response);
   });
+};
+
+function ItemViewModel(item) {
+  if (!(this instanceof ItemViewModel)) {
+    return new ItemViewModel(item);
+  }
+  console.log('Item:', JSON.stringify(item));
+  this.id = item.id;
+  this.name = item.name;
+  this.type = item.type || '';
+  this.description = item.description || '';
+  this.enabled = item.enabled;
+  this.action = function () {}; //TODO: can we compose that?
+  var children = (item.children || []).map(ItemViewModel);
+  this.children = ko.observableArray(children);
+  this.hasChildren = ko.computed(function () {
+    return this.children().length > 0;
+  }, this);
 }
+
+var socket = io(),
+  rootViewModel = new RootViewModel(socket);
 
 $().ready(function() {
-  ko.applyBindings({
-    servers: allServers,
-    actions: {
-      play: play,
-      stop: stop,
-    }
-  });
+  ko.applyBindings(rootViewModel);
 });
+
 socket.on('serverUpdate', function (servers) {
   console.log('Updating servers:', servers);
-  allServers(servers || {});
+  rootViewModel.setAllItems(servers);
 });
 socket.emit('fetchServers', function (servers) {
-  allServers(servers || {});
+  rootViewModel.setAllItems(servers);
 });
 </script>
 </body>
